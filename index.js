@@ -10,18 +10,26 @@ program
   .argument('[filename]', 'Name of a file to execute')
   .action(async ({ filename }) => {
     const name = filename || 'index.js'
-    console.log(name)
 
     try {
       await fs.promises.access(name)
     } catch (err) {
       throw new Error(`Could not find the file ${name}`)
     }
+    let proc
     const start = debounce(() => {
-      spawn('node', [name], { stdio: 'inherit' })
+      if (proc) {
+        proc.kill()
+      }
+      console.log('>>>>>> Starting Process >>>>>>')
+      proc = spawn('node', [name], { stdio: 'inherit' })
     }, 100)
 
-    chokidar.watch(name).on('add', start).on('change', start).on('unlink', start)
+    chokidar
+      .watch('.')
+      .on('add', start)
+      .on('change', start)
+      .on('unlink', start)
   })
 
 program.parse(process.argv)
